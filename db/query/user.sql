@@ -17,7 +17,7 @@ UPDATE users
 SET
   passhash = COALESCE(sqlc.narg(passhash), passhash),
   full_name = COALESCE(sqlc.narg(full_name), full_name),
-  username = COALESCE(sqlc.narg(username), username)
+  email = COALESCE(sqlc.narg(email), email)
 WHERE
   id = sqlc.arg(id)
 RETURNING *;

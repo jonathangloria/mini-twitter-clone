@@ -71,7 +71,7 @@ UPDATE users
 SET
   passhash = COALESCE($1, passhash),
   full_name = COALESCE($2, full_name),
-  username = COALESCE($3, username)
+  email = COALESCE($3, email)
 WHERE
   id = $4
 RETURNING id, email, username, passhash, full_name, created_at
@@ -80,7 +80,7 @@ RETURNING id, email, username, passhash, full_name, created_at
 type UpdateUserParams struct {
 	Passhash sql.NullString `json:"passhash"`
 	FullName sql.NullString `json:"full_name"`
-	Username sql.NullString `json:"username"`
+	Email    sql.NullString `json:"email"`
 	ID       int64          `json:"id"`
 }
 
@@ -88,7 +88,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 	row := q.db.QueryRowContext(ctx, updateUser,
 		arg.Passhash,
 		arg.FullName,
-		arg.Username,
+		arg.Email,
 		arg.ID,
 	)
 	var i User
