@@ -31,9 +31,14 @@ func RandomString(n int) string {
 	return sb.String()
 }
 
-// RandomOwner generates a random owner name
+// RandomUsername generates a random owner name
 func RandomUsername() string {
 	return RandomString(10)
+}
+
+// RandomFullName generates a random owner name
+func RandomFullname() string {
+	return RandomString(15)
 }
 
 // RandomEmail generates a random email

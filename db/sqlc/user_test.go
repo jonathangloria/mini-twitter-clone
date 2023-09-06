@@ -16,7 +16,7 @@ func createRandomUser(t *testing.T) User {
 		Email:    util.RandomEmail(),
 		Username: util.RandomUsername(),
 		Passhash: passhass,
-		FullName: util.RandomString(10),
+		FullName: util.RandomFullname(),
 	}
 
 	user, err := testQueries.CreateUser(context.Background(), arg)
@@ -52,7 +52,7 @@ func TestGetUser(t *testing.T) {
 
 func TestUpdateUserOnlyFullName(t *testing.T) {
 	oldUser := createRandomUser(t)
-	newFullname := util.RandomString(10)
+	newFullname := util.RandomFullname()
 
 	arg := UpdateUserParams{
 		ID: oldUser.ID,
@@ -119,7 +119,7 @@ func TestUdpdateUserAllFields(t *testing.T) {
 	newPasshash, err := util.HashPassword(newpass)
 	require.NoError(t, err)
 	newEmail := util.RandomEmail()
-	newFullname := util.RandomString(10)
+	newFullname := util.RandomFullname()
 
 	updatedUser, err := testQueries.UpdateUser(context.Background(), UpdateUserParams{
 		ID: oldUser.ID,
