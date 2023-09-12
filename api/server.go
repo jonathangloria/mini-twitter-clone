@@ -20,8 +20,8 @@ func NewServer(config util.Config, store *db.Store) *Server {
 	router := gin.Default()
 
 	router.POST("/users", server.createUser)
-	// router.POST("/follow", server.followUser)
-	// router.POST("/tweets", server.postTweet)
+	router.POST("/followers", server.followUser)
+	router.POST("/tweets", server.createTweet)
 
 	server.router = router
 	return server

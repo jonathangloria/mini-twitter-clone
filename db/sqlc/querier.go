@@ -16,6 +16,7 @@ type Querier interface {
 	GetFeed(ctx context.Context, arg GetFeedParams) ([]GetFeedRow, error)
 	GetTweet(ctx context.Context, id int64) (GetTweetRow, error)
 	GetUser(ctx context.Context, id int64) (User, error)
+	GetUserByUsername(ctx context.Context, username string) (User, error)
 	ListFollower(ctx context.Context, userID int64) ([]Follow, error)
 	ListFollowing(ctx context.Context, followerID int64) ([]Follow, error)
 	ListTweet(ctx context.Context, arg ListTweetParams) ([]ListTweetRow, error)

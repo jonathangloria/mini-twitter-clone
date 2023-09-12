@@ -18,6 +18,7 @@ type createUserRequest struct {
 }
 
 type userResponse struct {
+	ID        int64     `json:"id"`
 	Username  string    `json:"username"`
 	FullName  string    `json:"full_name"`
 	Email     string    `json:"email"`
@@ -26,6 +27,7 @@ type userResponse struct {
 
 func newUserResponse(user db.User) userResponse {
 	return userResponse{
+		ID:        user.ID,
 		Username:  user.Username,
 		FullName:  user.FullName,
 		Email:     user.Email,

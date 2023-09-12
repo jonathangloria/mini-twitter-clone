@@ -47,7 +47,7 @@ func (q *Queries) DeleteTweet(ctx context.Context, id int64) error {
 }
 
 const getFeed = `-- name: GetFeed :many
-SELECT users.id, users.username, tweets.body, tweets.created_at 
+SELECT tweets.id as tweet_id, users.id as user_id, users.username, tweets.body, tweets.created_at 
 FROM tweets 
 INNER JOIN users ON users.id = tweets.user_id
 INNER JOIN follows ON users.id = follows.user_id
@@ -61,7 +61,8 @@ type GetFeedParams struct {
 }
 
 type GetFeedRow struct {
-	ID        int64     `json:"id"`
+	TweetID   int64     `json:"tweet_id"`
+	UserID    int64     `json:"user_id"`
 	Username  string    `json:"username"`
 	Body      string    `json:"body"`
 	CreatedAt time.Time `json:"created_at"`
@@ -77,7 +78,8 @@ func (q *Queries) GetFeed(ctx context.Context, arg GetFeedParams) ([]GetFeedRow,
 	for rows.Next() {
 		var i GetFeedRow
 		if err := rows.Scan(
-			&i.ID,
+			&i.TweetID,
+			&i.UserID,
 			&i.Username,
 			&i.Body,
 			&i.CreatedAt,
@@ -96,7 +98,7 @@ func (q *Queries) GetFeed(ctx context.Context, arg GetFeedParams) ([]GetFeedRow,
 }
 
 const getTweet = `-- name: GetTweet :one
-SELECT users.id, users.username, tweets.body, tweets.created_at 
+SELECT tweets.id as tweet_id, users.id as user_id, users.username, tweets.body, tweets.created_at 
 FROM tweets INNER JOIN users
 ON users.id = tweets.user_id
 WHERE tweets.id = $1
@@ -104,7 +106,8 @@ LIMIT 1
 `
 
 type GetTweetRow struct {
-	ID        int64     `json:"id"`
+	TweetID   int64     `json:"tweet_id"`
+	UserID    int64     `json:"user_id"`
 	Username  string    `json:"username"`
 	Body      string    `json:"body"`
 	CreatedAt time.Time `json:"created_at"`
@@ -114,7 +117,8 @@ func (q *Queries) GetTweet(ctx context.Context, id int64) (GetTweetRow, error) {
 	row := q.db.QueryRowContext(ctx, getTweet, id)
 	var i GetTweetRow
 	err := row.Scan(
-		&i.ID,
+		&i.TweetID,
+		&i.UserID,
 		&i.Username,
 		&i.Body,
 		&i.CreatedAt,
@@ -123,7 +127,7 @@ func (q *Queries) GetTweet(ctx context.Context, id int64) (GetTweetRow, error) {
 }
 
 const listTweet = `-- name: ListTweet :many
-SELECT users.id, users.username, tweets.body, tweets.created_at 
+SELECT tweets.id as tweet_id, users.id as user_id, users.username, tweets.body, tweets.created_at 
 FROM tweets INNER JOIN users
 ON users.id = tweets.user_id
 WHERE tweets.user_id = $1 
@@ -136,7 +140,8 @@ type ListTweetParams struct {
 }
 
 type ListTweetRow struct {
-	ID        int64     `json:"id"`
+	TweetID   int64     `json:"tweet_id"`
+	UserID    int64     `json:"user_id"`
 	Username  string    `json:"username"`
 	Body      string    `json:"body"`
 	CreatedAt time.Time `json:"created_at"`
@@ -152,7 +157,8 @@ func (q *Queries) ListTweet(ctx context.Context, arg ListTweetParams) ([]ListTwe
 	for rows.Next() {
 		var i ListTweetRow
 		if err := rows.Scan(
-			&i.ID,
+			&i.TweetID,
+			&i.UserID,
 			&i.Username,
 			&i.Body,
 			&i.CreatedAt,
