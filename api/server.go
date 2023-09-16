@@ -1,23 +1,41 @@
 package api
 
 import (
+	"fmt"
+
 	"github.com/gin-gonic/gin"
 	db "github.com/jonathangloria/mini-twitter-clone/db/sqlc"
+	"github.com/jonathangloria/mini-twitter-clone/token"
 	"github.com/jonathangloria/mini-twitter-clone/util"
 )
 
 type Server struct {
-	config util.Config
-	store  *db.Store
-	router *gin.Engine
+	config     util.Config
+	store      *db.Store
+	tokenMaker token.Maker
+	router     *gin.Engine
 }
 
-func NewServer(config util.Config, store *db.Store) *Server {
-	server := &Server{
-		config: config,
-		store:  store,
+func NewServer(config util.Config, store *db.Store) (*Server, error) {
+	tokenMaker, err := token.NewPasetoMaker(config.TokenSymmetricKey)
+	if err != nil {
+		return nil, fmt.Errorf("cannot create token maker: %w", err)
 	}
+
+	server := &Server{
+		config:     config,
+		store:      store,
+		tokenMaker: tokenMaker,
+	}
+
+	server.setupRouter()
+	return server, nil
+}
+
+func (server *Server) setupRouter() {
 	router := gin.Default()
+
+	router.POST("/users/login", server.loginUser)
 
 	router.POST("/users", server.createUser)
 	router.POST("/followers", server.followUser)
@@ -25,7 +43,6 @@ func NewServer(config util.Config, store *db.Store) *Server {
 	router.GET("/feed/:id", server.getFeed)
 
 	server.router = router
-	return server
 }
 
 func (server *Server) Start(address string) error {
