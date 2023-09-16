@@ -22,6 +22,7 @@ func NewServer(config util.Config, store *db.Store) *Server {
 	router.POST("/users", server.createUser)
 	router.POST("/followers", server.followUser)
 	router.POST("/tweets", server.createTweet)
+	router.GET("/feed/:id", server.getFeed)
 
 	server.router = router
 	return server

@@ -64,3 +64,39 @@ func (server *Server) createTweet(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, rsp)
 }
+
+type getFeedRequest struct {
+	ID int64 `uri:"id" binding:"required,min=1"`
+}
+
+type getFeedQuery struct {
+	PageID int32 `form:"page_id" binding:"required,min=1"`
+}
+
+func (server *Server) getFeed(ctx *gin.Context) {
+	var req getFeedRequest
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	var query getFeedQuery
+	if err := ctx.ShouldBindQuery(&query); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	feed, err := server.store.GetFeed(ctx, db.GetFeedParams{
+		FollowerID: req.ID,
+		Offset:     (query.PageID - 1) * 10,
+	})
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, feed)
+}

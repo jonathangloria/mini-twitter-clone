@@ -25,7 +25,7 @@ SELECT tweets.id as tweet_id, users.id as user_id, users.username, tweets.body, 
 FROM tweets 
 INNER JOIN users ON users.id = tweets.user_id
 INNER JOIN follows ON users.id = follows.user_id
-WHERE follows.follower_id = $1 
+WHERE follows.follower_id = $1 ORDER BY tweets.created_at DESC 
 LIMIT 10 OFFSET $2;
 
 -- name: DeleteTweet :exec

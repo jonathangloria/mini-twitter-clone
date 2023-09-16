@@ -2,6 +2,7 @@ package api
 
 import (
 	"database/sql"
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -25,6 +26,11 @@ func (server *Server) followUser(ctx *gin.Context) {
 	var req createFollowerRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	if req.FollowedUser == req.Username {
+		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("cannot follow your own account")))
 		return
 	}
 
