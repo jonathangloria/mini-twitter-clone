@@ -81,5 +81,5 @@ func (server *Server) followUser(ctx *gin.Context) {
 		FollowedUser: req.FollowedUser,
 	}
 
-	ctx.JSON(http.StatusOK, rsp)
+	ctx.JSON(http.StatusCreated, rsp)
 }
