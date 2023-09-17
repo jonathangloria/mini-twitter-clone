@@ -7,11 +7,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	db "github.com/jonathangloria/mini-twitter-clone/db/sqlc"
+	"github.com/jonathangloria/mini-twitter-clone/token"
 	"github.com/lib/pq"
 )
 
 type createFollowerRequest struct {
-	Username     string `json:"username" binding:"required,alphanum"`
 	FollowedUser string `json:"followed_user" binding:"required,alphanum"`
 }
 
@@ -29,12 +29,14 @@ func (server *Server) followUser(ctx *gin.Context) {
 		return
 	}
 
-	if req.FollowedUser == req.Username {
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+
+	if req.FollowedUser == authPayload.Username {
 		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("cannot follow your own account")))
 		return
 	}
 
-	follower, err := server.store.GetUserByUsername(ctx, req.Username)
+	follower, err := server.store.GetUserByUsername(ctx, authPayload.Username)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
@@ -74,7 +76,7 @@ func (server *Server) followUser(ctx *gin.Context) {
 
 	rsp := followerResponse{
 		UserID:       following.FollowerID,
-		Username:     req.Username,
+		Username:     authPayload.Username,
 		FollowedID:   following.UserID,
 		FollowedUser: req.FollowedUser,
 	}

@@ -2,16 +2,17 @@ package api
 
 import (
 	"database/sql"
+	"errors"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	db "github.com/jonathangloria/mini-twitter-clone/db/sqlc"
+	"github.com/jonathangloria/mini-twitter-clone/token"
 )
 
 type createTweetRequest struct {
-	Username string `json:"username" binding:"required,alphanum"`
-	Body     string `json:"body" binding:"required,max=200"`
+	Body string `json:"body" binding:"required,max=200"`
 }
 
 type tweetResponse struct {
@@ -39,7 +40,9 @@ func (server *Server) createTweet(ctx *gin.Context) {
 		return
 	}
 
-	user, err := server.store.GetUserByUsername(ctx, req.Username)
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+
+	user, err := server.store.GetUserByUsername(ctx, authPayload.Username)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
@@ -82,6 +85,23 @@ func (server *Server) getFeed(ctx *gin.Context) {
 	var query getFeedQuery
 	if err := ctx.ShouldBindQuery(&query); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	user, err := server.store.GetUser(ctx, req.ID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	if user.Username != authPayload.Username {
+		err := errors.New("the account does not belong to the authenticated user")
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
 		return
 	}
 

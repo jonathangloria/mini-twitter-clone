@@ -36,11 +36,13 @@ func (server *Server) setupRouter() {
 	router := gin.Default()
 
 	router.POST("/users/login", server.loginUser)
-
 	router.POST("/users", server.createUser)
-	router.POST("/followers", server.followUser)
-	router.POST("/tweets", server.createTweet)
-	router.GET("/feed/:id", server.getFeed)
+
+	authRoutes := router.Group("/").Use(authMiddleware(server.tokenMaker))
+
+	authRoutes.POST("/followers", server.followUser)
+	authRoutes.POST("/tweets", server.createTweet)
+	authRoutes.GET("/feed/:id", server.getFeed)
 
 	server.router = router
 }
