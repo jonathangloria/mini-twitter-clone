@@ -41,6 +41,7 @@ func (server *Server) setupRouter() {
 
 	authRoutes := router.Group("/").Use(authMiddleware(server.tokenMaker))
 
+	authRoutes.GET("/users/:id", server.getUser)
 	authRoutes.POST("/followers", server.followUser)
 	authRoutes.POST("/tweets", server.createTweet)
 	authRoutes.GET("/feed/:id", server.getFeed)

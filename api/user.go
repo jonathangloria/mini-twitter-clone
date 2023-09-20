@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	db "github.com/jonathangloria/mini-twitter-clone/db/sqlc"
+	"github.com/jonathangloria/mini-twitter-clone/token"
 	"github.com/jonathangloria/mini-twitter-clone/util"
 	"github.com/lib/pq"
 )
@@ -72,6 +73,49 @@ func (server *Server) createUser(ctx *gin.Context) {
 	rsp := newUserResponse(user)
 
 	ctx.JSON(http.StatusCreated, rsp)
+}
+
+type getUserRequest struct {
+	ID int64 `uri:"id" binding:"required,min=1"`
+}
+
+type userResponsePublic struct {
+	ID        int64     `json:"id"`
+	Username  string    `json:"username"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+func (server *Server) getUser(ctx *gin.Context) {
+	var req getUserRequest
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	user, err := server.store.GetUser(ctx, req.ID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	if user.Username != authPayload.Username {
+		rsp := userResponsePublic{
+			ID:        user.ID,
+			Username:  user.Username,
+			CreatedAt: user.CreatedAt,
+		}
+		ctx.JSON(http.StatusOK, rsp)
+		return
+	}
+
+	rsp := newUserResponse(user)
+
+	ctx.JSON(http.StatusOK, rsp)
 }
 
 type loginUserRequest struct {
