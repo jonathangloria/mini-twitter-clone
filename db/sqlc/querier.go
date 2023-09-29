@@ -20,6 +20,7 @@ type Querier interface {
 	ListFollower(ctx context.Context, userID int64) ([]Follow, error)
 	ListFollowing(ctx context.Context, followerID int64) ([]Follow, error)
 	ListTweet(ctx context.Context, arg ListTweetParams) ([]ListTweetRow, error)
+	UpdateTweet(ctx context.Context, arg UpdateTweetParams) (Tweet, error)
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error)
 }
 

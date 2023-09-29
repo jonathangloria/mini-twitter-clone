@@ -46,6 +46,10 @@ func (server *Server) setupRouter() {
 	authRoutes.POST("/tweets", server.createTweet)
 	authRoutes.GET("/feed/:id", server.getFeed)
 	authRoutes.DELETE("/tweets/:id", server.deleteTweet)
+	authRoutes.PATCH("/tweets/:id", server.updateTweet)
+	// authRoutes.GET("/users/:id/tweets", server.listTweet)
+	// authRoutes.GET("/users/:id/followers", server.listFollower)
+	// authRoutes.GET("/users/:id/following", server.listFollowing)
 
 	server.router = router
 }

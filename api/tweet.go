@@ -21,6 +21,7 @@ type tweetResponse struct {
 	Username  string    `json:"username"`
 	Body      string    `json:"body"`
 	CreatedAt time.Time `json:"created_at"`
+	EditedAt  time.Time `json:"edited_at"`
 }
 
 func newTweetResponse(tweet db.Tweet, user db.User) tweetResponse {
@@ -30,6 +31,7 @@ func newTweetResponse(tweet db.Tweet, user db.User) tweetResponse {
 		Username:  user.Username,
 		Body:      tweet.Body,
 		CreatedAt: tweet.CreatedAt,
+		EditedAt:  tweet.EditedAt,
 	}
 }
 
@@ -90,6 +92,59 @@ func (server *Server) getTweet(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, tweet)
+}
+
+func (server *Server) updateTweet(ctx *gin.Context) {
+	var uri getTweetRequest
+	if err := ctx.ShouldBindUri(&uri); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	var req createTweetRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	user, err := server.store.GetUserByUsername(ctx, authPayload.Username)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	tweet, err := server.store.GetTweet(ctx, uri.ID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	if user.ID != tweet.UserID {
+		err := errors.New("the account does not belong to the authenticated user")
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	newtweet, err := server.store.UpdateTweet(ctx, db.UpdateTweetParams{
+		Body:     req.Body,
+		EditedAt: time.Now(),
+		ID:       uri.ID,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	rsp := newTweetResponse(newtweet, user)
+
+	ctx.JSON(http.StatusCreated, rsp)
 }
 
 func (server *Server) deleteTweet(ctx *gin.Context) {

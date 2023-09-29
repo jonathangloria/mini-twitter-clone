@@ -19,6 +19,7 @@ type Tweet struct {
 	// Content of the post
 	Body      string    `json:"body"`
 	CreatedAt time.Time `json:"created_at"`
+	EditedAt  time.Time `json:"edited_at"`
 }
 
 type User struct {

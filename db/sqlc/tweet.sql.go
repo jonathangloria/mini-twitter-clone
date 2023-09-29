@@ -16,7 +16,7 @@ INSERT INTO tweets(
     body
 ) VALUES (
     $1, $2
-) RETURNING id, user_id, body, created_at
+) RETURNING id, user_id, body, created_at, edited_at
 `
 
 type CreateTweetParams struct {
@@ -32,6 +32,7 @@ func (q *Queries) CreateTweet(ctx context.Context, arg CreateTweetParams) (Tweet
 		&i.UserID,
 		&i.Body,
 		&i.CreatedAt,
+		&i.EditedAt,
 	)
 	return i, err
 }
@@ -47,7 +48,7 @@ func (q *Queries) DeleteTweet(ctx context.Context, id int64) error {
 }
 
 const getFeed = `-- name: GetFeed :many
-SELECT tweets.id as tweet_id, users.id as user_id, users.username, tweets.body, tweets.created_at 
+SELECT tweets.id as tweet_id, users.id as user_id, users.username, tweets.body, tweets.created_at, tweets.edited_at  
 FROM tweets 
 INNER JOIN users ON users.id = tweets.user_id
 INNER JOIN follows ON users.id = follows.user_id
@@ -66,6 +67,7 @@ type GetFeedRow struct {
 	Username  string    `json:"username"`
 	Body      string    `json:"body"`
 	CreatedAt time.Time `json:"created_at"`
+	EditedAt  time.Time `json:"edited_at"`
 }
 
 func (q *Queries) GetFeed(ctx context.Context, arg GetFeedParams) ([]GetFeedRow, error) {
@@ -83,6 +85,7 @@ func (q *Queries) GetFeed(ctx context.Context, arg GetFeedParams) ([]GetFeedRow,
 			&i.Username,
 			&i.Body,
 			&i.CreatedAt,
+			&i.EditedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -98,7 +101,7 @@ func (q *Queries) GetFeed(ctx context.Context, arg GetFeedParams) ([]GetFeedRow,
 }
 
 const getTweet = `-- name: GetTweet :one
-SELECT tweets.id as tweet_id, users.id as user_id, users.username, tweets.body, tweets.created_at 
+SELECT tweets.id as tweet_id, users.id as user_id, users.username, tweets.body, tweets.created_at, tweets.edited_at 
 FROM tweets INNER JOIN users
 ON users.id = tweets.user_id
 WHERE tweets.id = $1
@@ -111,6 +114,7 @@ type GetTweetRow struct {
 	Username  string    `json:"username"`
 	Body      string    `json:"body"`
 	CreatedAt time.Time `json:"created_at"`
+	EditedAt  time.Time `json:"edited_at"`
 }
 
 func (q *Queries) GetTweet(ctx context.Context, id int64) (GetTweetRow, error) {
@@ -122,12 +126,13 @@ func (q *Queries) GetTweet(ctx context.Context, id int64) (GetTweetRow, error) {
 		&i.Username,
 		&i.Body,
 		&i.CreatedAt,
+		&i.EditedAt,
 	)
 	return i, err
 }
 
 const listTweet = `-- name: ListTweet :many
-SELECT tweets.id as tweet_id, users.id as user_id, users.username, tweets.body, tweets.created_at 
+SELECT tweets.id as tweet_id, users.id as user_id, users.username, tweets.body, tweets.created_at, tweets.edited_at  
 FROM tweets INNER JOIN users
 ON users.id = tweets.user_id
 WHERE tweets.user_id = $1 
@@ -145,6 +150,7 @@ type ListTweetRow struct {
 	Username  string    `json:"username"`
 	Body      string    `json:"body"`
 	CreatedAt time.Time `json:"created_at"`
+	EditedAt  time.Time `json:"edited_at"`
 }
 
 func (q *Queries) ListTweet(ctx context.Context, arg ListTweetParams) ([]ListTweetRow, error) {
@@ -162,6 +168,7 @@ func (q *Queries) ListTweet(ctx context.Context, arg ListTweetParams) ([]ListTwe
 			&i.Username,
 			&i.Body,
 			&i.CreatedAt,
+			&i.EditedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -174,4 +181,33 @@ func (q *Queries) ListTweet(ctx context.Context, arg ListTweetParams) ([]ListTwe
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateTweet = `-- name: UpdateTweet :one
+UPDATE tweets
+SET
+  body = $1,
+  edited_at = $2 
+WHERE
+  id = $3
+RETURNING id, user_id, body, created_at, edited_at
+`
+
+type UpdateTweetParams struct {
+	Body     string    `json:"body"`
+	EditedAt time.Time `json:"edited_at"`
+	ID       int64     `json:"id"`
+}
+
+func (q *Queries) UpdateTweet(ctx context.Context, arg UpdateTweetParams) (Tweet, error) {
+	row := q.db.QueryRowContext(ctx, updateTweet, arg.Body, arg.EditedAt, arg.ID)
+	var i Tweet
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Body,
+		&i.CreatedAt,
+		&i.EditedAt,
+	)
+	return i, err
 }
