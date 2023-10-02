@@ -39,6 +39,8 @@ func (server *Server) setupRouter() {
 	router.POST("/users", server.createUser)
 	router.GET("/tweets/:id", server.getTweet)
 	router.GET("/users/:id/tweets", server.listTweet)
+	router.GET("/users/:id/followers", server.listFollower)
+	router.GET("/users/:id/following", server.listFollowing)
 
 	authRoutes := router.Group("/").Use(authMiddleware(server.tokenMaker))
 
@@ -48,8 +50,6 @@ func (server *Server) setupRouter() {
 	authRoutes.GET("/users/:id/feed", server.getFeed)
 	authRoutes.DELETE("/tweets/:id", server.deleteTweet)
 	authRoutes.PATCH("/tweets/:id", server.updateTweet)
-	// authRoutes.GET("/users/:id/followers", server.listFollower)
-	// authRoutes.GET("/users/:id/following", server.listFollowing)
 
 	server.router = router
 }

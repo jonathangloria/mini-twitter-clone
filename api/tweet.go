@@ -251,6 +251,16 @@ func (server *Server) listTweet(ctx *gin.Context) {
 		return
 	}
 
+	_, err := server.store.GetUser(ctx, req.ID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
 	tweets, err := server.store.ListTweet(ctx, db.ListTweetParams{
 		UserID: req.ID,
 		Offset: (query.PageID - 1) * 10,

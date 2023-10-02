@@ -31,20 +31,26 @@ func (q *Queries) CreateFollowing(ctx context.Context, arg CreateFollowingParams
 }
 
 const listFollower = `-- name: ListFollower :many
-SELECT user_id, follower_id FROM follows
+SELECT follower_id as id, users.username FROM follows 
+INNER JOIN users ON users.id = follows.follower_id
 WHERE user_id = $1 LIMIT 20
 `
 
-func (q *Queries) ListFollower(ctx context.Context, userID int64) ([]Follow, error) {
+type ListFollowerRow struct {
+	ID       int64  `json:"id"`
+	Username string `json:"username"`
+}
+
+func (q *Queries) ListFollower(ctx context.Context, userID int64) ([]ListFollowerRow, error) {
 	rows, err := q.db.QueryContext(ctx, listFollower, userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Follow{}
+	items := []ListFollowerRow{}
 	for rows.Next() {
-		var i Follow
-		if err := rows.Scan(&i.UserID, &i.FollowerID); err != nil {
+		var i ListFollowerRow
+		if err := rows.Scan(&i.ID, &i.Username); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -59,20 +65,26 @@ func (q *Queries) ListFollower(ctx context.Context, userID int64) ([]Follow, err
 }
 
 const listFollowing = `-- name: ListFollowing :many
-SELECT user_id, follower_id FROM follows
+SELECT user_id as id, users.username FROM follows
+INNER JOIN users ON users.id = follows.user_id
 WHERE follower_id = $1 LIMIT 20
 `
 
-func (q *Queries) ListFollowing(ctx context.Context, followerID int64) ([]Follow, error) {
+type ListFollowingRow struct {
+	ID       int64  `json:"id"`
+	Username string `json:"username"`
+}
+
+func (q *Queries) ListFollowing(ctx context.Context, followerID int64) ([]ListFollowingRow, error) {
 	rows, err := q.db.QueryContext(ctx, listFollowing, followerID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Follow{}
+	items := []ListFollowingRow{}
 	for rows.Next() {
-		var i Follow
-		if err := rows.Scan(&i.UserID, &i.FollowerID); err != nil {
+		var i ListFollowingRow
+		if err := rows.Scan(&i.ID, &i.Username); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
