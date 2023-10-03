@@ -50,6 +50,19 @@ func TestGetUser(t *testing.T) {
 	require.WithinDuration(t, expected_user.CreatedAt, actual_user.CreatedAt, time.Second)
 }
 
+func TestGetUserByUsername(t *testing.T) {
+	expected_user := createRandomUser(t)
+	actual_user, err := testQueries.GetUserByUsername(context.Background(), expected_user.Username)
+	require.NoError(t, err)
+	require.NotEmpty(t, actual_user)
+
+	require.Equal(t, expected_user.Username, actual_user.Username)
+	require.Equal(t, expected_user.Passhash, actual_user.Passhash)
+	require.Equal(t, expected_user.FullName, actual_user.FullName)
+	require.Equal(t, expected_user.Email, actual_user.Email)
+	require.WithinDuration(t, expected_user.CreatedAt, actual_user.CreatedAt, time.Second)
+}
+
 func TestUpdateUserOnlyFullName(t *testing.T) {
 	oldUser := createRandomUser(t)
 	newFullname := util.RandomFullname()
