@@ -7,11 +7,11 @@ INSERT INTO follows (
 ) RETURNING *;
 
 -- name: ListFollower :many
-SELECT follower_id as id, users.username FROM follows 
+SELECT user_id, follower_id, users.username FROM follows 
 INNER JOIN users ON users.id = follows.follower_id
 WHERE user_id = $1 LIMIT 20;
 
 -- name: ListFollowing :many
-SELECT user_id as id, users.username FROM follows
+SELECT follower_id as user_id, user_id as following_id, users.username FROM follows
 INNER JOIN users ON users.id = follows.user_id
 WHERE follower_id = $1 LIMIT 20;

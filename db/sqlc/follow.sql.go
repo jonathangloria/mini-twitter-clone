@@ -31,14 +31,15 @@ func (q *Queries) CreateFollowing(ctx context.Context, arg CreateFollowingParams
 }
 
 const listFollower = `-- name: ListFollower :many
-SELECT follower_id as id, users.username FROM follows 
+SELECT user_id, follower_id, users.username FROM follows 
 INNER JOIN users ON users.id = follows.follower_id
 WHERE user_id = $1 LIMIT 20
 `
 
 type ListFollowerRow struct {
-	ID       int64  `json:"id"`
-	Username string `json:"username"`
+	UserID     int64  `json:"user_id"`
+	FollowerID int64  `json:"follower_id"`
+	Username   string `json:"username"`
 }
 
 func (q *Queries) ListFollower(ctx context.Context, userID int64) ([]ListFollowerRow, error) {
@@ -50,7 +51,7 @@ func (q *Queries) ListFollower(ctx context.Context, userID int64) ([]ListFollowe
 	items := []ListFollowerRow{}
 	for rows.Next() {
 		var i ListFollowerRow
-		if err := rows.Scan(&i.ID, &i.Username); err != nil {
+		if err := rows.Scan(&i.UserID, &i.FollowerID, &i.Username); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -65,14 +66,15 @@ func (q *Queries) ListFollower(ctx context.Context, userID int64) ([]ListFollowe
 }
 
 const listFollowing = `-- name: ListFollowing :many
-SELECT user_id as id, users.username FROM follows
+SELECT follower_id as user_id, user_id as following_id, users.username FROM follows
 INNER JOIN users ON users.id = follows.user_id
 WHERE follower_id = $1 LIMIT 20
 `
 
 type ListFollowingRow struct {
-	ID       int64  `json:"id"`
-	Username string `json:"username"`
+	UserID      int64  `json:"user_id"`
+	FollowingID int64  `json:"following_id"`
+	Username    string `json:"username"`
 }
 
 func (q *Queries) ListFollowing(ctx context.Context, followerID int64) ([]ListFollowingRow, error) {
@@ -84,7 +86,7 @@ func (q *Queries) ListFollowing(ctx context.Context, followerID int64) ([]ListFo
 	items := []ListFollowingRow{}
 	for rows.Next() {
 		var i ListFollowingRow
-		if err := rows.Scan(&i.ID, &i.Username); err != nil {
+		if err := rows.Scan(&i.UserID, &i.FollowingID, &i.Username); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
