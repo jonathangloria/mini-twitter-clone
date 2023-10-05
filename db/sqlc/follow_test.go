@@ -62,7 +62,7 @@ func TestListFollower(t *testing.T) {
 	}
 }
 
-func TestListFollowing(t *testing.T) {
+func CreateListFollowing(t *testing.T) (User, []ListFollowingRow) {
 	user1 := createRandomUser(t)
 	for i := 0; i < 5; i++ {
 		createRandomFollowing(t, user1)
@@ -78,4 +78,10 @@ func TestListFollowing(t *testing.T) {
 		require.NotEmpty(t, user)
 		require.Equal(t, user1.ID, user.UserID)
 	}
+
+	return user1, following
+}
+
+func TestListFollowing(t *testing.T) {
+	CreateListFollowing(t)
 }
